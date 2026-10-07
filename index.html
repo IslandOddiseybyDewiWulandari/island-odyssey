@@ -1,0 +1,1244 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Island Odyssey Central OS - Academic & Crisis Management Platform</title>
+
+    <!-- React 18 & ReactDOM CDN -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+
+    <!-- Babel Standalone for JSX Browser Transformation -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <!-- Tailwind Configuration -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        ocean: {
+                            900: '#071E30',
+                            800: '#0B3C5D',
+                            700: '#125582',
+                            600: '#1B73AA',
+                            500: '#2A92D4',
+                        },
+                        emeraldCustom: '#10B981',
+                        goldCustom: '#D97706',
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'glow': 'glow 2s infinite alternate',
+                    },
+                    keyframes: {
+                        glow: {
+                            '0%': { boxShadow: '0 0 5px rgba(16, 185, 129, 0.2)' },
+                            '100%': { boxShadow: '0 0 20px rgba(16, 185, 129, 0.6)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #050d1a;
+            color: #f1f5f9;
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1e293b;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #334155;
+        }
+        .bg-glass {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(12px);
+        }
+        .emergency-glow {
+            box-shadow: 0 0 25px rgba(239, 68, 68, 0.4);
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col">
+
+    <div id="root"></div>
+
+    <!-- MAIN REACT APPLICATION CODE -->
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        // --- 19 ROLES CONFIGURATION ---
+        const ROLES_DATA = {
+            founder: { id: 'founder', name: '1. Founder (Executive Command)', badge: 'FOUNDER VIEW', desc: 'Pengawasan makro 8 Core Engines, alokasi modal investasi, & eksekusi Hak Veto Konsorsium.' },
+            admin: { id: 'admin', name: '2. Admin Pusat OS', badge: 'ADMIN PUSAT', desc: 'Manajemen master data 248 Kategori, keamanan SHA-256, RBAC, dan sinkronisasi jaringan Node.' },
+            diplomat: { id: 'diplomat', name: '3. Konsorsium Global / Diplomat', badge: 'DIPLOMAT / KONSORSIUM', desc: 'Akses diplomasi soft-power, perdagangan ekspor lintas batas, dan Hak Veto Multilateral 6 Negara.' },
+            hr_pusat: { id: 'hr_pusat', name: '4. HR Pusat (SDM Nasional)', badge: 'HR PUSAT UARS', desc: 'Matriks alokasi tenaga kerja UARS nasional, database keahlian warga, dan jenjang karir Level 1-6.' },
+            hr_lapangan: { id: 'hr_lapangan', name: '5. HR Lapangan Region', badge: 'HR REGIONAL', desc: 'Manajemen penugasan Posko 3T, presensi biometrik GPS, dan keselamatan kerja eksekutor lokal.' },
+            staff_pusat: { id: 'staff_pusat', name: '6. Staff Pusat', badge: 'STAFF PUSAT', desc: 'Pengolahan administrasi dokumen, verifikasi pengajuan, dan penjadwalan Gantt Chart nasional.' },
+            staff_lapangan: { id: 'staff_lapangan', name: '7. Staff Operasional Lapangan', badge: 'STAFF LAPANGAN', desc: 'Input tugas operasional harian, pendaftaran TIE, dan terminal sync data offline LoRa.' },
+            eksekutor: { id: 'eksekutor', name: '8. Tim Eksekutor Harian', badge: 'EKSEKUTOR LAYER 1', desc: 'Layer 1 Operational Control - Input log progres pekerjaan & kendala harian max 1x24 jam ber bukti GPS.' },
+            qc: { id: 'qc', name: '9. Tim QC Material & Infra', badge: 'QUALITY CONTROL', desc: 'Verifikasi mutlak bahan bangunan, QR Code batch material, uji kelayakan beton/solar, dan karantina vendor.' },
+            audit_kap: { id: 'audit_kap', name: '10. Tim Audit KAP & Freelance', badge: 'AUDITOR LAYER 3 & 4', desc: 'Auditor KAP (Layer 3) & Auditor Freelance Sampling 10-20% (Layer 4) dengan log immutable SHA-256.' },
+            shadow_team: { id: 'shadow_team', name: '11. Shadow Team / Whistleblowing Admin', badge: 'SHADOW TEAM / LAYER 6', desc: 'Penanganan pengaduan anonim, penegakan sanksi, System Freeze E-Wallet, dan klarifikasi Direct Video Sanggah.' },
+            keuangan: { id: 'keuangan', name: '12. Tim Keuangan & Escrow Manager', badge: 'KEUANGAN & ESCROW', desc: 'Eksekusi pencairan escrow berbasis milestone, audit SLA pencairan, dan transparansi arus kas.' },
+            risk_manager: { id: 'risk_manager', name: '13. Risk & ERRS Manager', badge: 'RISK & ERRS ENGINE 06', desc: 'Proteksi krisis ekonomi makro, penyaluran buffer dana darurat ERRS, dan klaim asuransi mikro instan.' },
+            armada_laut: { id: 'armada_laut', name: '14. Armada Laut (Cargo of Care)', badge: 'FLEET COMMAND MARITIME', desc: 'Navigasi kapal kargo laut, distribusi modal TIE, penjemputan komoditas, & Misi Cargo of Care 3T.' },
+            armada_darat: { id: 'armada_darat', name: '15. Armada Darat (Cargo of Care)', badge: 'FLEET COMMAND LAND', desc: 'Armada truk & 4x4 terisolasi, distribusi bantuan medis & logistik darat ke posko terpencil.' },
+            armada_udara: { id: 'armada_udara', name: '16. Armada Udara (Cargo of Care)', badge: 'FLEET COMMAND AIR/DRONE', desc: 'VTOL Drone & penerbangan darurat medis, pengiriman sampel air/obat-obatan cepat ke area 3T.' },
+            mitra_strategis: { id: 'mitra_strategis', name: '17. Mitra Strategis / Investor', badge: 'MITRA STRATEGIS', desc: 'Monitoring SROI (Social Return on Investment), hibah modal, dan simulator RAB Kota Mandiri 3T.' },
+            warga: { id: 'warga', name: '18. Warga / Beneficiary', badge: 'PORTAL WARGA 3T', desc: 'Dompet Digital, pendaftaran TIE, bursa kerja UARS, klaim asuransi mikro, & Whistleblowing Komunitas.' },
+            public_anon: { id: 'public_anon', name: '19. Public Transparency View', badge: 'PUBLIC TRANSPARENCY L5', desc: 'Layer 5 - Akses terbuka masyarakat untuk melacak alur dana A-to-Z style Shopee secara real-time.' }
+        };
+
+        // --- 8 CORE ENGINES MOCK DATA ---
+        const ENGINE_DATA = [
+            { id: 'E01', name: 'Founder Business Engine', title: 'Immersive Royal Empire', allocated: 'Rp 850 Miliar', metricLabel: 'Investor ROI', metricVal: '12.4%', color: 'amber', icon: '👑', desc: 'Pengelolaan investasi utama, agregasi modal internasional, dan orkestrasi nilai tambah antar-ekosistem.' },
+            { id: 'E02', name: 'Social Enterprise Incubation', title: 'Twin Impact Enterprise (TIE)', allocated: 'Rp 320 Miliar', metricLabel: 'Jobs & Business Created', metricVal: '4,850 Unit', color: 'emerald', icon: '🚀', desc: 'Inkubasi bisnis kerakyatan warga 3T melalui moda transportasi armada & usaha koperasi terpadu.' },
+            { id: 'E03', name: 'Global Creative Trade Engine', title: 'Seoul Bridge Platform', allocated: 'Rp 140 Miliar', metricLabel: 'Export Volume', metricVal: '1,200 Ton', color: 'cyan', icon: '🌐', desc: 'Akses pabean dan perdagangan lintas negara untuk produk komoditas unggulan warga ke pasar global.' },
+            { id: 'E04', name: 'Media & Entertainment Economy', title: 'Gantaek Global Show', allocated: 'Rp 95 Miliar', metricLabel: 'Diplomacy Index', metricVal: '94 / 100', color: 'purple', icon: '🎬', desc: 'Diplomasi budaya soft-power, kampanye kesadaran publik global, dan transparansi multimedia.' },
+            { id: 'E05', name: 'Digital Infrastructure Economy', title: 'Zero-Trust SHA-256 Network', allocated: 'Rp 210 Miliar', metricLabel: 'Active Mesh Nodes', metricVal: '142 Node', color: 'blue', icon: '⚡', desc: 'Infrastruktur komunikasi off-grid LoRa/Satelit terenkripsi, biometrik presisi, & ledger immutable.' },
+            { id: 'E06', name: 'Microinsurance Economy', title: 'Professional Insurance System', allocated: 'Rp 120 Miliar', metricLabel: 'Risk Buffer Fund', metricVal: 'Rp 120 M', color: 'rose', icon: '🛡️', desc: 'Proteksi krisis pekerja 3T, klaim otomatis instan akibat cuaca ekstrem/bencana, dan skema ERRS.' },
+            { id: 'E07', name: 'Logistics & Production Economy', title: 'Cargo of Care Network', allocated: 'Rp 280 Miliar', metricLabel: 'Active Fleet Units', metricVal: '34 Armada', color: 'teal', icon: '🚢', desc: 'Distribusi logistik 3T (Laut, Darat, Udara) pengangkut modal fisik, alat kesehatan, & bahan bangunan.' },
+            { id: 'E08', name: 'Employment & Human Capital', title: 'Job Guarantee System (UARS)', allocated: 'Rp 190 Miliar', metricLabel: 'Matched Personnel', metricVal: '54,320 Warga', color: 'indigo', icon: '👷', desc: 'Jaminan penyerapan tenaga kerja warga pascabencana & pengembangan kapasitas bertahap Level 1-6.' }
+        ];
+
+        function App() {
+            // App state
+            const [activeRole, setActiveRole] = useState('founder');
+            const [activeTab, setActiveTab] = useState('landing'); // landing, engines, dashboard, uars, tie, rab, monitoring, wallet, attendance, timeline, regional, special
+            const [emergencyMode, setEmergencyMode] = useState(false);
+            const [selectedEngine, setSelectedEngine] = useState(null);
+            const [showNotification, setShowNotification] = useState(null);
+            
+            // Custom toast notification trigger
+            const notify = (msg, type = 'success') => {
+                setShowNotification({ msg, type });
+                setTimeout(() => setShowNotification(null), 4000);
+            };
+
+            // Switch role handler
+            const handleRoleChange = (roleKey) => {
+                setActiveRole(roleKey);
+                notify(`Berpindah ke tampilan: ${ROLES_DATA[roleKey].name}`, 'info');
+                if (roleKey === 'warga') {
+                    setActiveTab('wallet');
+                } else if (roleKey === 'armada_laut' || roleKey === 'armada_darat' || roleKey === 'armada_udara') {
+                    setActiveTab('tie');
+                } else {
+                    setActiveTab('dashboard');
+                }
+            };
+
+            return (
+                <div className={`min-h-screen flex flex-col ${emergencyMode ? 'border-4 border-red-600' : ''}`}>
+                    
+                    {/* STICKY COPYRIGHT BANNER PERMANEN */}
+                    <div className="sticky top-0 z-50 bg-gradient-to-r from-red-950 via-amber-900 to-red-950 text-amber-100 text-[11px] md:text-xs font-bold px-4 py-2 text-center shadow-lg border-b border-amber-500/50 flex items-center justify-between">
+                        <span className="hidden sm:inline">⚠️ HAK CIPTA DILINDUNGI:</span>
+                        <p className="truncate mx-2">
+                            Karya Akademik Terbatas milik <strong>Dewi Wulandari (D.W. Reandra)</strong> | NIM: 24121070090 LSPR. Terlindung UU No. 28/2014 & Berne Convention.
+                        </p>
+                        <button 
+                            onClick={() => setEmergencyMode(!emergencyMode)}
+                            className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider transition ${emergencyMode ? 'bg-red-600 text-white animate-pulse' : 'bg-red-900/80 text-red-200 border border-red-500 hover:bg-red-700'}`}>
+                            {emergencyMode ? '🚨 EMERGENCY ACTIVE' : '🚨 TOGGLE EMERGENCY'}
+                        </button>
+                    </div>
+
+                    {/* MAIN NAVBAR */}
+                    <header className="bg-slate-900/90 backdrop-blur-md border-b border-slate-800 px-4 py-3 sticky top-[33px] z-40">
+                        <div className="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-3">
+                            {/* Logo */}
+                            <div className="flex items-center space-x-3 cursor-pointer" onClick={() => setActiveTab('landing')}>
+                                <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-blue-700 rounded-xl flex items-center justify-center font-black text-slate-950 text-xl shadow-lg shadow-cyan-500/20">
+                                    IO
+                                </div>
+                                <div>
+                                    <h1 className="text-base font-black text-white tracking-wider flex items-center gap-2">
+                                        ISLAND ODYSSEY
+                                        <span className="text-[10px] bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 px-1.5 py-0.5 rounded uppercase font-bold">CENTRAL OS v4.2</span>
+                                    </h1>
+                                    <p className="text-[11px] text-cyan-400 font-medium">Integrated Disaster Management & Zero-Leakage Crisis Relief</p>
+                                </div>
+                            </div>
+
+                            {/* 19 Quick-Role Switcher */}
+                            <div className="flex items-center space-x-2 bg-slate-950 p-1.5 rounded-xl border border-slate-800">
+                                <label className="text-[11px] font-bold text-slate-400 pl-2 hidden md:inline">ROLE ACCESS:</label>
+                                <select 
+                                    value={activeRole} 
+                                    onChange={(e) => handleRoleChange(e.target.value)}
+                                    className="bg-slate-900 text-cyan-300 text-xs font-bold rounded-lg px-3 py-1.5 border border-cyan-500/40 focus:outline-none focus:ring-2 focus:ring-cyan-400 cursor-pointer">
+                                    {Object.keys(ROLES_DATA).map(key => (
+                                        <option key={key} value={key}>{ROLES_DATA[key].name}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+
+                        {/* NAVIGATION TABS */}
+                        <div className="max-w-7xl mx-auto mt-3 pt-2 border-t border-slate-800/80 flex space-x-1 overflow-x-auto text-xs font-semibold scrollbar-none">
+                            {[
+                                { id: 'landing', label: '🏠 Landing & Overview' },
+                                { id: 'engines', label: '⚙️ 8 Core Engines' },
+                                { id: 'dashboard', label: '📊 Role Dashboard' },
+                                { id: 'uars', label: '👷 UARS Workforce' },
+                                { id: 'tie', label: '🚢 TIE Fleet Command' },
+                                { id: 'rab', label: '🏛️ Kota Mandiri 3T & RAB' },
+                                { id: 'monitoring', label: '🛡️ Monitoring 6-Layer' },
+                                { id: 'wallet', label: '💳 Wallet & Video Sanggah' },
+                                { id: 'attendance', label: '📸 Biometric & GPS' },
+                                { id: 'timeline', label: '📦 Shopee-Style Timeline' },
+                                { id: 'regional', label: '🗺️ Dasbor Wilayah' },
+                                { id: 'special', label: '🌐 Konsorsium & LoRa' }
+                            ].map(tab => (
+                                <button
+                                    key={tab.id}
+                                    onClick={() => setActiveTab(tab.id)}
+                                    className={`px-3 py-2 rounded-lg whitespace-nowrap transition-all ${
+                                        activeTab === tab.id 
+                                        ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/50 font-bold shadow-sm' 
+                                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                                    }`}>
+                                    {tab.label}
+                                </button>
+                            ))}
+                        </div>
+                    </header>
+
+                    {/* TOAST NOTIFICATION CONTAINER */}
+                    {showNotification && (
+                        <div className="fixed bottom-5 right-5 z-50 bg-slate-900 border border-cyan-500 text-white px-4 py-3 rounded-xl shadow-2xl flex items-center space-x-3 animate-bounce">
+                            <span className="text-xl">🔔</span>
+                            <div>
+                                <p className="text-xs font-bold text-cyan-300">Notifikasi Central OS</p>
+                                <p className="text-xs text-slate-300">{showNotification.msg}</p>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* MAIN CONTENT AREA */}
+                    <main className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 space-y-6">
+
+                        {/* ACTIVE ROLE HEADER BANNER */}
+                        <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 rounded-2xl p-4 md:p-5 border border-slate-700/80 shadow-xl flex flex-wrap justify-between items-center gap-4">
+                            <div>
+                                <span className="bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-wider">
+                                    {ROLES_DATA[activeRole].badge}
+                                </span>
+                                <h2 className="text-xl md:text-2xl font-black text-white mt-1.5 flex items-center gap-2">
+                                    {ROLES_DATA[activeRole].name}
+                                </h2>
+                                <p className="text-xs md:text-sm text-slate-400 mt-1 max-w-3xl">
+                                    {ROLES_DATA[activeRole].desc}
+                                </p>
+                            </div>
+                            <div className="flex items-center space-x-4 bg-slate-950/60 px-4 py-2.5 rounded-xl border border-slate-800">
+                                <div>
+                                    <span className="text-[10px] text-slate-400 block font-semibold">Mesh Network Status</span>
+                                    <span className="text-emerald-400 font-bold text-xs flex items-center gap-1.5 mt-0.5">
+                                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                                        142 Nodes LoRa Active
+                                    </span>
+                                </div>
+                                <div className="border-l border-slate-800 pl-4">
+                                    <span className="text-[10px] text-slate-400 block font-semibold">Ledger Hash</span>
+                                    <span className="text-cyan-400 font-mono text-xs font-bold">SHA-256 Verified</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* SECTION CONTENT SWITCHING */}
+                        {activeTab === 'landing' && <LandingPageSection setActiveTab={setActiveTab} notify={notify} />}
+                        {activeTab === 'engines' && <EightEnginesSection selectedEngine={selectedEngine} setSelectedEngine={setSelectedEngine} notify={notify} />}
+                        {activeTab === 'dashboard' && <RoleDashboardSection activeRole={activeRole} notify={notify} />}
+                        {activeTab === 'uars' && <UARSModuleSection activeRole={activeRole} notify={notify} />}
+                        {activeTab === 'tie' && <TIEFleetCommandSection activeRole={activeRole} notify={notify} />}
+                        {activeTab === 'rab' && <KotaMandiriRABSection activeRole={activeRole} notify={notify} />}
+                        {activeTab === 'monitoring' && <MonitoringSixLayerSection activeRole={activeRole} notify={notify} />}
+                        {activeTab === 'wallet' && <WalletVideoSanggahSection activeRole={activeRole} notify={notify} />}
+                        {activeTab === 'attendance' && <BiometricAttendanceSection activeRole={activeRole} notify={notify} />}
+                        {activeTab === 'timeline' && <ShopeeStyleTimelineSection activeRole={activeRole} notify={notify} />}
+                        {activeTab === 'regional' && <RegionalMonitoringDashboard activeRole={activeRole} notify={notify} />}
+                        {activeTab === 'special' && <SpecialModulesSection activeRole={activeRole} notify={notify} />}
+
+                    </main>
+
+                    {/* FOOTER */}
+                    <footer className="bg-slate-900 border-t border-slate-800 py-6 px-4 text-center text-xs text-slate-500 mt-12">
+                        <div className="max-w-7xl mx-auto space-y-2">
+                            <p className="font-semibold text-slate-400">Island Odyssey Central OS &copy; 2026 Dewi Wulandari (D.W. Reandra). All Rights Reserved.</p>
+                            <p className="text-[11px] text-slate-600">Terlindung Undang-Undang Hak Cipta No. 28/2014 & Berne Convention. Dilarang keras meniru atau mengadaptasi arsitektur sistem ini tanpa izin tertulis.</p>
+                        </div>
+                    </footer>
+                </div>
+            );
+        }
+
+        function LandingPageSection({ setActiveTab, notify }) {
+            return (
+                <div className="space-y-12 py-4">
+                    {/* HERO BANNER */}
+                    <div className="bg-gradient-to-br from-slate-900 via-ocean-900 to-slate-950 rounded-3xl p-8 md:p-12 border border-cyan-500/30 relative overflow-hidden shadow-2xl">
+                        <div className="absolute top-0 right-0 -mt-12 -mr-12 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
+                        
+                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center relative z-10">
+                            <div className="lg:col-span-7 space-y-6">
+                                <span className="inline-flex items-center gap-2 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider">
+                                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                                    Kedaulatan Wilayah 3T & Non-3T
+                                </span>
+                                
+                                <h1 className="text-3xl md:text-5xl font-black text-white leading-tight tracking-tight">
+                                    ISLAND ODYSSEY <br/>
+                                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-teal-300 to-emerald-400">
+                                        Integrated Social Enterprise Ecosystem
+                                    </span>
+                                </h1>
+
+                                <p className="text-sm md:text-base text-slate-300 leading-relaxed">
+                                    Platform Penanggulangan Bencana Terpadu & Relief Bantuan Tanpa Kebocoran (Zero-Leakage Crisis Relief). Memperkuat ekonomi warga pesisir, pulau terluar, dan wilayah 3T melalui 8 Core Engine & 6-Layer Monitoring System.
+                                </p>
+
+                                {/* CTA BUTTONS */}
+                                <div className="flex flex-wrap gap-3 pt-2">
+                                    <button 
+                                        onClick={() => notify('Memulai pengunduhan APK Mobile Central OS...', 'info')}
+                                        className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-black px-6 py-3.5 rounded-xl shadow-lg shadow-cyan-500/25 flex items-center gap-3 text-xs md:text-sm transition-all transform hover:-translate-y-0.5">
+                                        <span>📱 Download Aplikasi</span>
+                                        <span className="bg-slate-950/20 px-2 py-0.5 rounded text-[10px] text-slate-900">v4.2 APK</span>
+                                    </button>
+
+                                    <button 
+                                        onClick={() => setActiveTab('engines')}
+                                        className="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 font-bold px-6 py-3.5 rounded-xl text-xs md:text-sm transition">
+                                        Jelajahi 8 Core Engine
+                                    </button>
+
+                                    <button 
+                                        onClick={() => notify('Posko Darurat Bencana Diaktifkan! Signal LoRa Node Switch ON.', 'danger')}
+                                        className="bg-red-600 hover:bg-red-500 text-white font-bold px-5 py-3.5 rounded-xl text-xs md:text-sm flex items-center gap-2 shadow-lg shadow-red-600/30 animate-pulse">
+                                        🚨 Posko Darurat (Emergency Mode)
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* MOBILE PHONE MOCKUP VISUAL */}
+                            <div className="lg:col-span-5 flex justify-center">
+                                <div className="w-72 h-[480px] bg-slate-900 border-4 border-slate-700 rounded-[40px] p-4 shadow-2xl relative flex flex-col justify-between overflow-hidden">
+                                    <div className="w-28 h-4 bg-slate-800 rounded-full mx-auto mb-2"></div>
+                                    <div className="bg-slate-950 rounded-2xl p-3 border border-slate-800 flex-1 space-y-3 overflow-y-auto text-left">
+                                        <div className="flex justify-between items-center text-[10px] text-cyan-400 font-mono">
+                                            <span>POSKO NATUNA NODE 04</span>
+                                            <span className="text-emerald-400">● LIVE</span>
+                                        </div>
+                                        <div className="bg-slate-900 p-2.5 rounded-xl border border-slate-800">
+                                            <span className="text-[10px] text-slate-400 block">E-Wallet Warga 3T</span>
+                                            <span className="text-lg font-black text-white">Rp 3.750.000</span>
+                                            <span className="text-[9px] text-emerald-400 block mt-0.5">Verified SHA-256 Escrow</span>
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <span className="text-[10px] font-bold text-slate-400">TUGAS HARI INI (UARS)</span>
+                                            <div className="bg-cyan-500/10 border border-cyan-500/30 p-2 rounded-lg text-[11px] text-cyan-300">
+                                                Penjemputan Modal Perahu TIE (Shift 1)
+                                            </div>
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <span className="text-[10px] font-bold text-slate-400">STATUS CARGO OF CARE</span>
+                                            <div className="bg-emerald-500/10 border border-emerald-500/30 p-2 rounded-lg text-[11px] text-emerald-300">
+                                                Armada Laut Kapal KM Natuna In-Transit
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="w-12 h-1 bg-slate-700 rounded-full mx-auto mt-2"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* STATISTIK IMPACT SECTION */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {[
+                            { label: 'Penerima Manfaat 3T', val: '12,348', unit: 'Warga Terverifikasi', color: 'cyan' },
+                            { label: 'Cakupan Desa & Posko', val: '248', unit: 'Desa Pesisir & Terluar', color: 'emerald' },
+                            { label: 'Program Aktif', val: '5,120', unit: 'Inisiatif TIE & UARS', color: 'amber' },
+                            { label: 'Wilayah Operasional', val: '8', unit: 'Provinsi Kepulauan', color: 'purple' }
+                        ].map((stat, i) => (
+                            <div key={i} className="bg-slate-900 p-5 rounded-2xl border border-slate-800 hover:border-cyan-500/40 transition">
+                                <span className="text-xs text-slate-400 font-semibold block">{stat.label}</span>
+                                <span className="text-3xl font-black text-white mt-1 block">{stat.val}</span>
+                                <span className="text-[11px] text-cyan-400 font-medium mt-1 block">{stat.unit}</span>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* RINGKASAN FITUR & 8 CORE ENGINE GRID */}
+                    <div className="space-y-4">
+                        <div className="flex justify-between items-end">
+                            <div>
+                                <h3 className="text-xl font-bold text-white">8 Core Engine Arsitektur KHI</h3>
+                                <p className="text-xs text-slate-400">Sistem utama penopang kedaulatan ekonomi & penanggulangan krisis</p>
+                            </div>
+                            <button onClick={() => setActiveTab('engines')} className="text-xs text-cyan-400 font-bold hover:underline">
+                                Lihat Semua Engine &rarr;
+                            </button>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                            {ENGINE_DATA.map(engine => (
+                                <div key={engine.id} className="bg-slate-900 p-5 rounded-2xl border border-slate-800 hover:border-cyan-500/50 transition group cursor-pointer" onClick={() => setActiveTab('engines')}>
+                                    <div className="flex justify-between items-start">
+                                        <span className="text-2xl">{engine.icon}</span>
+                                        <span className="text-[10px] font-bold text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded border border-emerald-400/30">ONLINE</span>
+                                    </div>
+                                    <h4 className="font-bold text-white text-sm mt-3 group-hover:text-cyan-400 transition">{engine.name}</h4>
+                                    <p className="text-xs text-slate-400 mt-0.5">{engine.title}</p>
+                                    <div className="mt-4 pt-3 border-t border-slate-800 flex justify-between text-xs">
+                                        <span className="text-slate-500">{engine.metricLabel}:</span>
+                                        <span className="font-bold text-cyan-300">{engine.metricVal}</span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* BANNER CTA DOWNLOAD APP */}
+                    <div className="bg-gradient-to-r from-cyan-900/60 via-slate-900 to-slate-900 p-8 rounded-3xl border border-cyan-500/30 flex flex-wrap justify-between items-center gap-6">
+                        <div className="space-y-2 max-w-xl">
+                            <h3 className="text-2xl font-bold text-white">Unduh Island Odyssey Central OS</h3>
+                            <p className="text-xs text-slate-300 leading-relaxed">
+                                Tersedia untuk perangkat Android & iOS dengan mode Mesh Offline-First (tetap berfungsi tanpa sinyal internet melalui koneksi LoRa radio).
+                            </p>
+                        </div>
+                        <div className="flex flex-wrap gap-3">
+                            <button onClick={() => notify('Google Play Store Download Initiated', 'success')} className="bg-slate-950 border border-slate-700 hover:border-cyan-400 text-white px-5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-3">
+                                <span className="text-xl">🤖</span>
+                                <div className="text-left">
+                                    <span className="text-[9px] text-slate-400 block uppercase">GET IT ON</span>
+                                    <span>Google Play</span>
+                                </div>
+                            </button>
+                            <button onClick={() => notify('Apple App Store Download Initiated', 'success')} className="bg-slate-950 border border-slate-700 hover:border-cyan-400 text-white px-5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-3">
+                                <span className="text-xl">🍎</span>
+                                <div className="text-left">
+                                    <span className="text-[9px] text-slate-400 block uppercase">Download on the</span>
+                                    <span>App Store</span>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        function EightEnginesSection({ selectedEngine, setSelectedEngine, notify }) {
+            return (
+                <div className="space-y-6">
+                    <div className="flex justify-between items-center">
+                        <div>
+                            <h3 className="text-2xl font-black text-white">8 Core Engine Central OS (Nama Asli Arsitektur)</h3>
+                            <p className="text-xs text-slate-400">Modul kontrol interaktif 8 pilar penopang sistem penanggulangan bencana dan pemberdayaan 3T.</p>
+                        </div>
+                        <span className="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/30">
+                            ALL ENGINES 99.8% HEALTH
+                        </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        {ENGINE_DATA.map((engine) => (
+                            <div 
+                                key={engine.id} 
+                                className="bg-slate-900 rounded-2xl border border-slate-800 p-5 hover:border-cyan-500 transition space-y-4 flex flex-col justify-between shadow-xl">
+                                <div>
+                                    <div className="flex justify-between items-start">
+                                        <span className="text-xs font-mono font-bold text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/30">{engine.id}</span>
+                                        <span className="text-[10px] font-bold text-emerald-400 flex items-center gap-1">
+                                            <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse"></span> ONLINE
+                                        </span>
+                                    </div>
+                                    <div className="text-3xl my-2">{engine.icon}</div>
+                                    <h4 className="font-bold text-white text-base">{engine.name}</h4>
+                                    <p className="text-xs text-cyan-300 font-semibold">{engine.title}</p>
+                                    <p className="text-xs text-slate-400 mt-2 leading-relaxed">{engine.desc}</p>
+                                </div>
+
+                                <div className="space-y-3 pt-3 border-t border-slate-800">
+                                    <div className="flex justify-between text-xs">
+                                        <span className="text-slate-400">Capital Allocated:</span>
+                                        <span className="font-bold text-emerald-400">{engine.allocated}</span>
+                                    </div>
+                                    <div className="flex justify-between text-xs">
+                                        <span className="text-slate-400">{engine.metricLabel}:</span>
+                                        <span className="font-bold text-cyan-300">{engine.metricVal}</span>
+                                    </div>
+                                    <button 
+                                        onClick={() => setSelectedEngine(engine)}
+                                        className="w-full bg-slate-800 hover:bg-cyan-600 hover:text-slate-950 text-cyan-300 font-bold py-2 rounded-xl text-xs transition border border-slate-700">
+                                        Detail & Simulasikan &rarr;
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* MODAL SIMULASI PARAMETER ENGINE */}
+                    {selectedEngine && (
+                        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+                            <div className="bg-slate-900 border border-cyan-500/50 rounded-3xl max-w-lg w-full p-6 space-y-5 shadow-2xl relative">
+                                <button onClick={() => setSelectedEngine(null)} className="absolute top-4 right-4 text-slate-400 hover:text-white font-bold text-lg">✕</button>
+                                
+                                <div className="flex items-center space-x-3">
+                                    <span className="text-4xl">{selectedEngine.icon}</span>
+                                    <div>
+                                        <span className="text-xs text-cyan-400 font-mono">{selectedEngine.id} PARAMETER CONTROL</span>
+                                        <h3 className="text-lg font-bold text-white">{selectedEngine.name}</h3>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-3 text-xs bg-slate-950 p-4 rounded-xl border border-slate-800">
+                                    <label className="block font-semibold text-slate-300">Alokasi Anggaran Tambahan (Injeksi Modal)</label>
+                                    <input type="range" min="100" max="1000" defaultValue="500" className="w-full accent-cyan-400" />
+                                    
+                                    <label className="block font-semibold text-slate-300 mt-2">Target SROI (Social Return on Investment)</label>
+                                    <select className="w-full bg-slate-900 border border-slate-700 rounded p-2 text-slate-200">
+                                        <option>High Social Impact (3.8x Multiplier)</option>
+                                        <option>Balanced Economic Return (2.5x Multiplier)</option>
+                                        <option>Emergency Rapid Deployment (Immediate Relief)</option>
+                                    </select>
+                                </div>
+
+                                <div className="flex justify-end gap-3">
+                                    <button onClick={() => setSelectedEngine(null)} className="px-4 py-2 bg-slate-800 text-slate-300 rounded-xl text-xs font-bold">Batal</button>
+                                    <button 
+                                        onClick={() => {
+                                            notify(`Simulasi Parameter ${selectedEngine.name} Berhasil Diterapkan!`, 'success');
+                                            setSelectedEngine(null);
+                                        }}
+                                        className="px-5 py-2 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold rounded-xl text-xs">
+                                        Terapkan Parameter Simulasi
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        function RoleDashboardSection({ activeRole, notify }) {
+            const roleInfo = ROLES_DATA[activeRole];
+
+            return (
+                <div className="space-y-6">
+                    <div className="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4">
+                        <div className="flex justify-between items-center border-b border-slate-800 pb-3">
+                            <h3 className="text-xl font-bold text-white">Analytics Dashboard & Command Console</h3>
+                            <span className="text-xs text-cyan-400 font-mono">ROLE: {activeRole.toUpperCase()}</span>
+                        </div>
+
+                        {/* SPECIFIC DASHBOARD VIEWS FOR 19 ROLES */}
+                        {activeRole === 'founder' && (
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div className="bg-slate-950 p-4 rounded-xl border border-slate-800">
+                                    <span className="text-xs text-slate-400">Total Capital Deployed</span>
+                                    <h4 className="text-2xl font-black text-emerald-400 mt-1">Rp 850 M Miliar</h4>
+                                    <span className="text-[10px] text-slate-500">8 Core Engine Allocation</span>
+                                </div>
+                                <div className="bg-slate-950 p-4 rounded-xl border border-slate-800">
+                                    <span className="text-xs text-slate-400">Total Employment Impact</span>
+                                    <h4 className="text-2xl font-black text-cyan-400 mt-1">54,320 Warga</h4>
+                                    <span className="text-[10px] text-slate-500">UARS Career Level 1-6</span>
+                                </div>
+                                <div className="bg-slate-950 p-4 rounded-xl border border-slate-800">
+                                    <span className="text-xs text-slate-400">Diplomacy Index (Gantaek)</span>
+                                    <h4 className="text-2xl font-black text-purple-400 mt-1">94 / 100</h4>
+                                    <span className="text-[10px] text-slate-500">Multilateral 6 Countries</span>
+                                </div>
+                            </div>
+                        )}
+
+                        {activeRole === 'admin' && (
+                            <div className="space-y-4">
+                                <div className="grid grid-cols-1 md:grid-cols-4 gap-3 text-xs">
+                                    <div className="bg-slate-950 p-3 rounded-lg border border-slate-800"><span className="text-slate-400 block">Kategori Beneficiary</span><strong className="text-lg text-white">248 Kategori</strong></div>
+                                    <div className="bg-slate-950 p-3 rounded-lg border border-slate-800"><span className="text-slate-400 block">Enkripsi Jaringan</span><strong className="text-lg text-emerald-400">SHA-256 ACTIVE</strong></div>
+                                    <div className="bg-slate-950 p-3 rounded-lg border border-slate-800"><span className="text-slate-400 block">Nodes LoRa Satelit</span><strong className="text-lg text-cyan-400">142 Online</strong></div>
+                                    <div className="bg-slate-950 p-3 rounded-lg border border-slate-800"><span className="text-slate-400 block">Log Sistem Today</span><strong className="text-lg text-amber-400">18,920 Events</strong></div>
+                                </div>
+                            </div>
+                        )}
+
+                        {activeRole === 'diplomat' && (
+                            <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3">
+                                <h4 className="text-sm font-bold text-purple-400">Konsorsium Global & Veto Multilateral (6 Negara)</h4>
+                                <p className="text-xs text-slate-300">Hak Veto Aktif untuk perwakilan konsorsium mitra dalam voting pendanaan bencana.</p>
+                                <button onClick={() => notify('Veto Konsorsium Berhasil Didaftarkan ke Ledger!', 'info')} className="bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold px-4 py-2 rounded-lg">
+                                    Eksekusi Hak Veto Konsorsium
+                                </button>
+                            </div>
+                        )}
+
+                        {activeRole === 'qc' && (
+                            <div className="space-y-3 text-xs">
+                                <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 flex justify-between items-center">
+                                    <div>
+                                        <span className="font-bold text-white block">Pemindai Batch Material QR Code</span>
+                                        <span className="text-slate-400">Uji kelayakan mutu semen, solar panel, & pipa air di posko 3T</span>
+                                    </div>
+                                    <button onClick={() => notify('QR Code Material SNI-8910 Valid! Quality Passed 🟢', 'success')} className="bg-emerald-600 text-slate-950 font-bold px-4 py-2 rounded-lg">
+                                        Scan QR Batch Material
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        {activeRole === 'shadow_team' && (
+                            <div className="bg-red-950/40 p-4 rounded-xl border border-red-800 space-y-3">
+                                <h4 className="text-sm font-bold text-red-400">Terminal Sanction Mechanism & Whistleblowing Layer 6</h4>
+                                <p className="text-xs text-slate-300">Pengawasan rahasia, eksekusi System Freeze, pembekuan E-Wallet fraud, & SP1-SP3.</p>
+                                <div className="flex gap-2">
+                                    <button onClick={() => notify('System Freeze E-Wallet Eksekusi Berhasil!', 'danger')} className="bg-red-600 hover:bg-red-500 text-white font-bold px-3 py-1.5 rounded text-xs">
+                                        🔒 Freeze E-Wallet Suspect
+                                    </button>
+                                    <button onClick={() => notify('Surat Peringatan SP-1 Terbit Otomatis via System!', 'warning')} className="bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold px-3 py-1.5 rounded text-xs">
+                                        📄 Penerbitan SP1
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* GENERIC VIEW FOR OTHER ROLES */}
+                        {!['founder', 'admin', 'diplomat', 'qc', 'shadow_team'].includes(activeRole) && (
+                            <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 text-xs space-y-2">
+                                <p className="text-cyan-300 font-bold">Modul Khusus Peran {roleInfo.name} Aktif</p>
+                                <p className="text-slate-400">Seluruh widget, matriks kerja, dan kewenangan transaksi telah disesuaikan secara presisi untuk peran ini.</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        }
+
+        function UARSModuleSection({ activeRole, notify }) {
+            const isWarga = activeRole === 'warga';
+
+            return (
+                <div className="space-y-6">
+                    <div className="flex justify-between items-center">
+                        <div>
+                            <h3 className="text-2xl font-black text-white">Modul UARS (Job Guarantee & Human Capital)</h3>
+                            <p className="text-xs text-slate-400">Penjaminan tenaga kerja warga, sertifikasi keahlian, & penempatan posko 3T.</p>
+                        </div>
+                        <span className="text-xs bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 px-3 py-1 rounded-full font-bold">
+                            Engine 08 Active
+                        </span>
+                    </div>
+
+                    {/* JIKA ROLE = WARGA (MOBILE FRIENDLY VIEW) */}
+                    {isWarga ? (
+                        <div className="space-y-4 max-w-2xl mx-auto">
+                            <div className="bg-slate-900 p-5 rounded-2xl border border-slate-800 space-y-3">
+                                <span className="text-xs text-indigo-400 font-bold uppercase">Card 1: Status Pekerjaan Aktif</span>
+                                <h4 className="text-lg font-bold text-white">Welder Hunian Tetap — PT Bangun Palu</h4>
+                                <div className="flex justify-between text-xs text-slate-400">
+                                    <span>Status Kehadiran: <strong class="text-emerald-400">100% Terverifikasi GPS</strong></span>
+                                    <span>Evaluasi: <strong class="text-amber-400">Level 3 (Senior)</strong></span>
+                                </div>
+                            </div>
+
+                            <div className="bg-slate-900 p-5 rounded-2xl border border-slate-800 space-y-3">
+                                <span className="text-xs text-cyan-400 font-bold uppercase">Card 2: Lowongan Pasca Bencana (Match 98%)</span>
+                                <div className="p-3 bg-slate-950 rounded-xl border border-slate-800 flex justify-between items-center text-xs">
+                                    <div>
+                                        <h5 className="font-bold text-white">Teknisi Solar Panel Off-Grid</h5>
+                                        <p className="text-slate-400">Posko Laut Natuna • Insentif Rp 4.5M/bln</p>
+                                    </div>
+                                    <button onClick={() => notify('Lamaran UARS Berhasil Dikirim ke HR Region!', 'success')} className="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-3 py-1.5 rounded-lg">
+                                        Lamar Pekerjaan
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="bg-slate-900 p-5 rounded-2xl border border-slate-800 space-y-3">
+                                <span className="text-xs text-amber-400 font-bold uppercase">Card 3: Program Pelatihan Warga</span>
+                                <div className="p-3 bg-slate-950 rounded-xl border border-slate-800 flex justify-between items-center text-xs">
+                                    <div>
+                                        <h5 className="font-bold text-white">Pelatihan Las Tahan Gempa & K3 Konstruksi</h5>
+                                        <p className="text-slate-400">Sertifikat Resmi UARS • Gratis Subsidized</p>
+                                    </div>
+                                    <button onClick={() => notify('Pendaftaran Pelatihan Berhasil!', 'success')} className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-3 py-1.5 rounded-lg">
+                                        Ikuti Pelatihan
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    ) : (
+                        /* JIKA ROLE = ADMIN / HR / AUDITOR (DESKTOP MANAGEMENT VIEW) */
+                        <div className="space-y-6">
+                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                <div className="bg-slate-900 p-4 rounded-xl border border-slate-800"><span className="text-xs text-slate-400 block">Total Tenaga Kerja</span><strong className="text-2xl text-white">54,320 Warga</strong></div>
+                                <div className="bg-slate-900 p-4 rounded-xl border border-slate-800"><span className="text-xs text-slate-400 block">Terverifikasi Biometrik</span><strong className="text-2xl text-emerald-400">3,842 Terdaftar</strong></div>
+                                <div className="bg-slate-900 p-4 rounded-xl border border-slate-800"><span className="text-xs text-slate-400 block">Dalam Pelatihan</span><strong className="text-2xl text-amber-400">4,850 Orang</strong></div>
+                                <div className="bg-slate-900 p-4 rounded-xl border border-slate-800"><span className="text-xs text-slate-400 block">Penempatan Aktif</span><strong className="text-2xl text-cyan-400">78 Posko 3T</strong></div>
+                            </div>
+
+                            <div className="bg-slate-900 p-5 rounded-2xl border border-slate-800 space-y-4">
+                                <h4 className="font-bold text-white text-sm">Daftar Rekomendasi Tenaga Kerja UARS (Sampling Master Database)</h4>
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-left text-xs text-slate-300">
+                                        <thead className="bg-slate-950 text-slate-400 font-semibold uppercase">
+                                            <tr>
+                                                <th className="p-3">ID & Nama Warga</th>
+                                                <th className="p-3">Sertifikasi & Skill</th>
+                                                <th className="p-3">Lokasi Asal</th>
+                                                <th className="p-3">Jenjang UARS</th>
+                                                <th className="p-3">Aksi HR</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-800 font-mono">
+                                            <tr>
+                                                <td className="p-3 font-bold text-white">#UARS-8821 Ahmad Natuna</td>
+                                                <td className="p-3 text-cyan-300">Welder & Kapal Pesisir (K3)</td>
+                                                <td className="p-3">Kepulauan Riau (Natuna)</td>
+                                                <td className="p-3"><span className="bg-cyan-500/20 text-cyan-300 px-2 py-0.5 rounded">Level 3</span></td>
+                                                <td className="p-3"><button onClick={() => notify('Penugasan ke Posko 04 Berhasil!', 'success')} className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-3 py-1 rounded">Tugaskan ke Posko</button></td>
+                                            </tr>
+                                            <tr>
+                                                <td className="p-3 font-bold text-white">#UARS-7712 Maria NTT</td>
+                                                <td className="p-3 text-cyan-300">Teknisi Solar Panel & Air</td>
+                                                <td className="p-3">NTT (Anambas Node)</td>
+                                                <td className="p-3"><span className="bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded">Level 2</span></td>
+                                                <td className="p-3"><button onClick={() => notify('Penugasan ke Posko 02 Berhasil!', 'success')} className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-3 py-1 rounded">Tugaskan ke Posko</button></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        function TIEFleetCommandSection({ activeRole, notify }) {
+            const [fleetTab, setFleetTab] = useState(
+                activeRole === 'armada_darat' ? 'darat' : activeRole === 'armada_udara' ? 'udara' : 'laut'
+            );
+
+            return (
+                <div className="space-y-6">
+                    <div className="flex justify-between items-center">
+                        <div>
+                            <h3 className="text-2xl font-black text-white">Modul TIE (Twin Impact Enterprise) & Fleet Command</h3>
+                            <p className="text-xs text-slate-400">Pengawasan armada Cargo of Care (Laut, Darat, Udara), distribusi modal, & penjemputan UMKM.</p>
+                        </div>
+                        <div className="flex space-x-2 bg-slate-900 p-1 rounded-xl border border-slate-800">
+                            <button onClick={() => setFleetTab('laut')} className={`px-3 py-1.5 rounded-lg text-xs font-bold ${fleetTab === 'laut' ? 'bg-cyan-500 text-slate-950' : 'text-slate-400'}`}>🚢 Armada Laut</button>
+                            <button onClick={() => setFleetTab('darat')} className={`px-3 py-1.5 rounded-lg text-xs font-bold ${fleetTab === 'darat' ? 'bg-amber-500 text-slate-950' : 'text-slate-400'}`}>🚛 Armada Darat</button>
+                            <button onClick={() => setFleetTab('udara')} className={`px-3 py-1.5 rounded-lg text-xs font-bold ${fleetTab === 'udara' ? 'bg-purple-500 text-slate-950' : 'text-slate-400'}`}>✈️ Armada Udara</button>
+                        </div>
+                    </div>
+
+                    {/* FLEET DETAILS */}
+                    <div className="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-6">
+                        <div className="flex justify-between items-center border-b border-slate-800 pb-4">
+                            <div>
+                                <span className="text-xs text-cyan-400 font-mono font-bold uppercase">STATUS AKTIF FLEET COMMAND MASTER - {fleetTab.toUpperCase()}</span>
+                                <h4 className="text-lg font-bold text-white mt-1">KM. Cargo of Care Node {fleetTab === 'laut' ? '04 (Maritime)' : fleetTab === 'darat' ? '08 (4x4 Land Fleet)' : '01 (VTOL Drone)'}</h4>
+                            </div>
+                            <button onClick={() => notify(`Registrasi unit baru ${fleetTab.toUpperCase()} berhasil diajukan!`, 'success')} className="bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold text-xs px-4 py-2 rounded-xl">
+                                + Tambah Unit Armada TIE
+                            </button>
+                        </div>
+
+                        {/* SECTION 1: INTERACTIVE FLEET ROUTE MAP */}
+                        <div className="bg-slate-950 p-5 rounded-xl border border-slate-800 space-y-3">
+                            <h5 className="text-xs font-bold text-cyan-400 uppercase">Section 1: Fleet Route Tracking & Cargo of Care Points</h5>
+                            <div className="bg-slate-900 h-48 rounded-xl border border-slate-800 flex items-center justify-center relative overflow-hidden">
+                                <div className="text-center space-y-2">
+                                    <span className="text-3xl">🗺️</span>
+                                    <p className="text-xs font-bold text-slate-300">Live GPS Tracking Map ({fleetTab.toUpperCase()})</p>
+                                    <p className="text-[10px] text-cyan-400 font-mono">Lat: -3.8219, Long: 119.8210 • LoRa Active Signal -78dBm</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* SECTION 2: CARGO OF CARE MISSION & MANIFEST */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                            <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2">
+                                <span className="font-bold text-amber-400 block">Section 2: Misi Cargo of Care & Pengangkutan Modal</span>
+                                <p className="text-slate-300">• Transportasi Modal Fisik Perahu Nelayan TIE (4 Unit)</p>
+                                <p className="text-slate-300">• Distribusi Peralatan Medis & Solar Cell Posko 3T</p>
+                                <button onClick={() => notify('Serah Terima Cargo of Care Berhasil Ditandatangani!', 'success')} className="mt-2 bg-amber-500 text-slate-950 font-bold px-3 py-1.5 rounded">
+                                    Verifikasi Bukti Serah Terima
+                                </button>
+                            </div>
+
+                            <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2">
+                                <span className="font-bold text-cyan-400 block">Section 3: Digital QR Scanner & LoRa Manifest</span>
+                                <p className="text-slate-300">Pemindai QR Code manifest muatan kargo online/offline.</p>
+                                <button onClick={() => notify('QR Code Manifest Scanning Completed!', 'info')} className="mt-2 bg-cyan-600 text-white font-bold px-3 py-1.5 rounded">
+                                    Scan QR Manifest Kargo
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        function KotaMandiriRABSection({ activeRole, notify }) {
+            const [budgetScale, setBudgetScale] = useState('mid');
+
+            const budgetData = {
+                low: { val: 'Rp 345 Miliar', target: '100% Akses Kesehatan & Pendidikan Terpadu Dasar', houses: '1,200 Unit' },
+                mid: { val: 'Rp 650 Miliar', target: '+ 80% Revitalisasi Ekonomi Lokal & Koperasi TIE', houses: '2,800 Unit' },
+                high: { val: 'Rp 850 Miliar', target: '+ 24/7 Logistik Mandiri, Energi Terbarukan, & Bandara/Pelabuhan', houses: '4,500 Unit' }
+            };
+
+            return (
+                <div className="space-y-6">
+                    <div className="flex justify-between items-center">
+                        <div>
+                            <h3 className="text-2xl font-black text-white">Modul RAB & Arsitektur Kota Mandiri 3T (Non-Bencana)</h3>
+                            <p className="text-xs text-slate-400">Interactive Budget Scale Simulator & status hunian warga kawasan mandiri.</p>
+                        </div>
+                    </div>
+
+                    <div className="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-6">
+                        <div className="space-y-3">
+                            <h4 className="text-sm font-bold text-cyan-400 uppercase">Budget Scale Interactive Simulator (Mitra Strategis / Admin)</h4>
+                            <div className="flex gap-3">
+                                {['low', 'mid', 'high'].map((scale) => (
+                                    <button 
+                                        key={scale}
+                                        onClick={() => setBudgetScale(scale)}
+                                        className={`flex-1 py-3 rounded-xl border font-bold text-xs uppercase transition ${
+                                            budgetScale === scale 
+                                            ? 'bg-cyan-500 text-slate-950 border-cyan-400 shadow-lg' 
+                                            : 'bg-slate-950 text-slate-400 border-slate-800 hover:border-slate-700'
+                                        }`}>
+                                        Scale {scale}: {budgetData[scale].val}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="bg-slate-950 p-5 rounded-xl border border-slate-800 grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <span className="text-xs text-slate-400 block">Total Injeksi Modal Scale</span>
+                                <strong className="text-2xl font-black text-emerald-400">{budgetData[budgetScale].val}</strong>
+                            </div>
+                            <div>
+                                <span className="text-xs text-slate-400 block">Target Hunian Tetap</span>
+                                <strong className="text-2xl font-black text-cyan-400">{budgetData[budgetScale].houses}</strong>
+                            </div>
+                            <div>
+                                <span className="text-xs text-slate-400 block">Cakupan Layanan Terpadu</span>
+                                <p className="text-xs font-semibold text-slate-200 mt-1">{budgetData[budgetScale].target}</p>
+                            </div>
+                        </div>
+
+                        <div className="pt-2">
+                            <button onClick={() => notify(`RAB Scale ${budgetScale.toUpperCase()} Berhasil Di-Lock ke Smart Contract!`, 'success')} className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-6 py-3 rounded-xl text-xs">
+                                Lock Approval RAB & Trigger Deployment Phase
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        function MonitoringSixLayerSection({ activeRole, notify }) {
+            return (
+                <div className="space-y-6">
+                    <div className="flex justify-between items-center">
+                        <div>
+                            <h3 className="text-2xl font-black text-white">Sistem Pengawasan & Tata Kelola 6-Layer</h3>
+                            <p className="text-xs text-slate-400">Struktur diagram alur monitoring bertingkat dari eksekusi harian hingga sanksi tegas.</p>
+                        </div>
+                    </div>
+
+                    {/* TABLE STATUS 6 LAYER */}
+                    <div className="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden">
+                        <table class="w-full text-left text-xs text-slate-300">
+                            <thead className="bg-slate-950 text-slate-400 uppercase font-semibold">
+                                <tr>
+                                    <th className="p-3.5">Layer Pengawasan</th>
+                                    <th className="p-3.5">Fungsi Utama & Verifikasi</th>
+                                    <th className="p-3.5">Frekuensi & Audit</th>
+                                    <th className="p-3.5">Status System Live</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-800">
+                                <tr>
+                                    <td className="p-3.5 font-bold text-cyan-400">Layer 1: Operational Control</td>
+                                    <td className="p-3.5">Tim Eksekutor Harian • Input Laporan Max 1x24 Jam</td>
+                                    <td className="p-3.5">Harian</td>
+                                    <td className="p-3.5"><span className="bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded font-bold">100% ON TRACK</span></td>
+                                </tr>
+                                <tr>
+                                    <td className="p-3.5 font-bold text-cyan-400">Layer 2: Internal Verification</td>
+                                    <td className="p-3.5">Cek Biometrik Wajah + Geofencing GPS Presisi</td>
+                                    <td className="p-3.5">Mingguan</td>
+                                    <td className="p-3.5"><span className="bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded font-bold">VERIFIED</span></td>
+                                </tr>
+                                <tr>
+                                    <td className="p-3.5 font-bold text-cyan-400">Layer 3: External Audit (KAP)</td>
+                                    <td className="p-3.5">Audit Keuangan KAP & Log Terenkripsi SHA-256</td>
+                                    <td className="p-3.5">Triwulan / Tahunan</td>
+                                    <td className="p-3.5"><span className="bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded font-bold">WTP OPINION</span></td>
+                                </tr>
+                                <tr>
+                                    <td className="p-3.5 font-bold text-cyan-400">Layer 4: Freelance Auditor</td>
+                                    <td className="p-3.5">Audit Mendadak Sampling Acak 10-20% Area Riskan</td>
+                                    <td className="p-3.5">Insidental</td>
+                                    <td className="p-3.5"><span className="bg-cyan-500/20 text-cyan-300 px-2 py-0.5 rounded font-bold">SAMPLING 15%</span></td>
+                                </tr>
+                                <tr>
+                                    <td className="p-3.5 font-bold text-cyan-400">Layer 5: Public Transparency</td>
+                                    <td className="p-3.5">Shopee-Style Timeline A-to-Z + Whistleblowing Warga</td>
+                                    <td className="p-3.5">Real-time</td>
+                                    <td className="p-3.5"><span className="bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded font-bold">PUBLIC LIVE</span></td>
+                                </tr>
+                                <tr>
+                                    <td className="p-3.5 font-bold text-amber-400">Layer 6: Sanction Mechanism</td>
+                                    <td className="p-3.5">Freeze E-Wallet, SP1-SP3, & Direct Video Sanggah</td>
+                                    <td className="p-3.5">Saat Pelanggaran</td>
+                                    <td className="p-3.5"><span className="bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded font-bold">0 ACTIVE FRAUD</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            );
+        }
+
+        function WalletVideoSanggahSection({ activeRole, notify }) {
+            const [recording, setRecording] = useState(false);
+            const [videoRecorded, setVideoRecorded] = useState(false);
+
+            const handleStartRecord = () => {
+                setRecording(true);
+                setTimeout(() => {
+                    setRecording(false);
+                    setVideoRecorded(true);
+                    notify('Rekaman Direct Video Sanggah Berhasil Dibuat!', 'success');
+                }, 3000);
+            };
+
+            return (
+                <div className="space-y-6">
+                    <div className="flex justify-between items-center">
+                        <div>
+                            <h3 className="text-2xl font-black text-white">E-Wallet Warga & Direct Video Record Sanggah</h3>
+                            <p className="text-xs text-slate-400">Pencairan dana bansos/insentif UARS & mekanisme sanggah pembekuan e-wallet.</p>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="bg-gradient-to-br from-slate-900 to-slate-950 p-5 rounded-2xl border border-emerald-500/40 space-y-2">
+                            <span className="text-xs text-emerald-400 font-bold uppercase">Saldo E-Wallet Utama</span>
+                            <h4 className="text-3xl font-black text-white">Rp 3.750.000</h4>
+                            <p className="text-[10px] text-slate-400">Terverifikasi Escrow Smart Contract</p>
+                            <button onClick={() => notify('Permintaan Pencairan Tunai Dikirim ke Agen POS 3T!', 'success')} className="w-full mt-2 bg-emerald-500 text-slate-950 font-bold py-2 rounded-xl text-xs">
+                                Tarik Tunai Agen POS 3T
+                            </button>
+                        </div>
+
+                        <div className="bg-gradient-to-br from-slate-900 to-slate-950 p-5 rounded-2xl border border-amber-500/40 space-y-2">
+                            <span className="text-xs text-amber-400 font-bold uppercase">Modal Usaha TIE (Koperasi)</span>
+                            <h4 className="text-3xl font-black text-white">Rp 5.000.000</h4>
+                            <p className="text-[10px] text-slate-400">Injeksi Gradual Release Phase 2</p>
+                        </div>
+
+                        <div className="bg-gradient-to-br from-slate-900 to-slate-950 p-5 rounded-2xl border border-cyan-500/40 space-y-2">
+                            <span className="text-xs text-cyan-400 font-bold uppercase">Offline LoRa Mesh Voucher</span>
+                            <h4 className="text-3xl font-black text-white">12 Voucher</h4>
+                            <p className="text-[10px] text-slate-400">Dapat Digunakan Mode Off-Grid</p>
+                        </div>
+                    </div>
+
+                    {/* FORM DIRECT VIDEO SANGGAH */}
+                    <div className="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4 max-w-2xl">
+                        <h4 className="text-base font-bold text-amber-400 flex items-center gap-2">
+                            <span>🎥</span> Form Sanggah via Direct Video Record (Kamera Browser)
+                        </h4>
+                        <p className="text-xs text-slate-300">
+                            Jika e-wallet dibekukan akibat dugaan anomali, rekam video klarifikasi langsung dari kamera perangkat untuk ditinjau Verifikator Acak.
+                        </p>
+
+                        <div className="bg-slate-950 h-44 rounded-xl border border-slate-800 flex flex-col items-center justify-center relative">
+                            {recording ? (
+                                <div className="text-center space-y-2">
+                                    <span className="w-4 h-4 bg-red-600 rounded-full animate-ping inline-block"></span>
+                                    <p className="text-xs font-bold text-red-400">Merekam Video Direct... (00:03s)</p>
+                                </div>
+                            ) : videoRecorded ? (
+                                <div className="text-center space-y-2">
+                                    <span className="text-3xl text-emerald-400">✓</span>
+                                    <p className="text-xs font-bold text-emerald-400">Video Rekaman Klarifikasi Siap Dikirim!</p>
+                                </div>
+                            ) : (
+                                <div className="text-center space-y-2">
+                                    <span className="text-3xl">📷</span>
+                                    <p className="text-xs text-slate-400">Kamera Standby • Siap Merekam</p>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="flex gap-3">
+                            <button 
+                                onClick={handleStartRecord}
+                                disabled={recording}
+                                className="bg-red-600 hover:bg-red-500 text-white font-bold px-4 py-2 rounded-xl text-xs">
+                                {recording ? 'Merekam...' : 'Mulai Rekam Direct Video'}
+                            </button>
+
+                            <button 
+                                onClick={() => {
+                                    if (!videoRecorded) {
+                                        notify('Harap rekam video klarifikasi terlebih dahulu!', 'warning');
+                                        return;
+                                    }
+                                    notify('Berkas Sanggah & Direct Video Dikirim ke Verifikator Acak Layer 6!', 'success');
+                                }}
+                                className="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs">
+                                Kirim Pengajuan Sanggah
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        function BiometricAttendanceSection({ activeRole, notify }) {
+            const [scanning, setScanning] = useState(false);
+            const [checkedIn, setCheckedIn] = useState(false);
+
+            const handleCheckIn = () => {
+                setScanning(true);
+                setTimeout(() => {
+                    setScanning(false);
+                    setCheckedIn(true);
+                    notify('Absensi Biometrik & GPS Tagging Berhasil Verifikasi!', 'success');
+                }, 2500);
+            };
+
+            return (
+                <div className="space-y-6">
+                    <div className="flex justify-between items-center">
+                        <div>
+                            <h3 className="text-2xl font-black text-white">Absensi Biometric, Geolocation GPS & Timestamping</h3>
+                            <p className="text-xs text-slate-400">Verifikasi kehadiran presisi tinggi untuk validasi pekerjaan & pencairan insentif.</p>
+                        </div>
+                    </div>
+
+                    <div className="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-6 max-w-xl">
+                        <div className="bg-slate-950 p-5 rounded-xl border border-slate-800 text-center space-y-4">
+                            <div className="w-24 h-24 bg-slate-900 rounded-full border-2 border-cyan-500/50 mx-auto flex items-center justify-center relative overflow-hidden">
+                                {scanning ? (
+                                    <div className="absolute inset-0 bg-cyan-500/20 animate-pulse flex items-center justify-center">
+                                        <span className="text-xs font-mono text-cyan-300">SCANNING...</span>
+                                    </div>
+                                ) : checkedIn ? (
+                                    <span className="text-4xl text-emerald-400">✓</span>
+                                ) : (
+                                    <span className="text-4xl">👤</span>
+                                )}
+                            </div>
+
+                            <div>
+                                <h4 className="font-bold text-white text-sm">Face Recognition & GPS Geofencing</h4>
+                                <p className="text-xs text-slate-400 mt-1">Koordinat Presisi: Lat -3.8219, Long 119.8210 (WITA)</p>
+                                <p className="text-xs text-emerald-400 font-mono mt-0.5">Timestamp: {new Date().toLocaleString('id-ID')}</p>
+                            </div>
+
+                            <button 
+                                onClick={handleCheckIn}
+                                disabled={scanning || checkedIn}
+                                className={`w-full py-3 rounded-xl font-bold text-xs transition ${
+                                    checkedIn 
+                                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' 
+                                    : 'bg-cyan-500 hover:bg-cyan-400 text-slate-950'
+                                }`}>
+                                {scanning ? 'Memproses Biometrik...' : checkedIn ? 'Absensi Terverifikasi ✓' : 'Absen Masuk (Check-In GPS)'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        function ShopeeStyleTimelineSection({ activeRole, notify }) {
+            return (
+                <div className="space-y-6">
+                    <div className="flex justify-between items-center">
+                        <div>
+                            <h3 className="text-2xl font-black text-white">Shopee-Style Timeline & Audit Trail A-to-Z</h3>
+                            <p className="text-xs text-slate-400">Pelacakan vertikal alur bantuan & modal fisik dengan perbandingan visual CCTV/Drone.</p>
+                        </div>
+                    </div>
+
+                    <div className="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-6 max-w-3xl">
+                        <div className="space-y-6 relative border-l-2 border-cyan-500/40 pl-6 ml-3">
+                            {/* NODE 1 */}
+                            <div className="relative">
+                                <span className="absolute -left-[31px] top-0 w-4 h-4 bg-emerald-400 rounded-full border-4 border-slate-900"></span>
+                                <span className="text-[10px] text-cyan-400 font-mono">07-10-2026 08:30 WITA • PUSAT ESCROW</span>
+                                <h4 className="font-bold text-white text-sm">Injeksi Modal Inisiasi Inisiasi TIE Koperasi</h4>
+                                <p className="text-xs text-slate-400">Dana dialokasikan dari Escrow Engine 02 ke Fleet Command Armada Laut Natuna.</p>
+                            </div>
+
+                            {/* NODE 2 */}
+                            <div className="relative">
+                                <span className="absolute -left-[31px] top-0 w-4 h-4 bg-emerald-400 rounded-full border-4 border-slate-900"></span>
+                                <span className="text-[10px] text-cyan-400 font-mono">07-10-2026 11:15 WITA • HUB CARGO OF CARE</span>
+                                <h4 className="font-bold text-white text-sm">Penguatan Modal Perahu Nelayan Di-Load ke Kapal</h4>
+                                <p className="text-xs text-slate-400">Serah terima material diawasi Tim QC dengan verifikasi QR Batch.</p>
+                                <button onClick={() => notify('Membandingkan Footage CCTV Gudang vs Drone Kamera...', 'info')} className="mt-2 bg-slate-800 text-cyan-300 border border-slate-700 px-3 py-1 rounded text-[11px] font-bold">
+                                    📹 Bandingkan Bukti Visual (CCTV vs Drone)
+                                </button>
+                            </div>
+
+                            {/* NODE 3 */}
+                            <div className="relative">
+                                <span className="absolute -left-[31px] top-0 w-4 h-4 bg-cyan-400 rounded-full animate-ping border-4 border-slate-900"></span>
+                                <span className="text-[10px] text-amber-400 font-mono">IN-TRANSIT • POSKO DESA 3T NODE 04</span>
+                                <h4 className="font-bold text-white text-sm">Kapal In-Transit Menuju Pesisir Natuna</h4>
+                                <p className="text-xs text-slate-400">Estimasi Tiba: 07-10-2026 16:00 WITA (SLA On Track).</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        function RegionalMonitoringDashboard({ activeRole, notify }) {
+            const [subTab, setSubTab] = useState('infra');
+
+            return (
+                <div className="space-y-6">
+                    <div className="flex justify-between items-center">
+                        <div>
+                            <h3 className="text-2xl font-black text-white">Dasbor Monitoring Wilayah (Per Kab/Kota)</h3>
+                            <p className="text-xs text-slate-400">Pemisahan monitoring infrastruktur fisik (QC Material) dan non-infrastruktur (Sosial/Ekonomi).</p>
+                        </div>
+                        <div className="flex space-x-2 bg-slate-900 p-1 rounded-xl border border-slate-800">
+                            <button onClick={() => setSubTab('infra')} className={`px-4 py-1.5 rounded-lg text-xs font-bold ${subTab === 'infra' ? 'bg-cyan-500 text-slate-950' : 'text-slate-400'}`}>🏗️ Infrastruktur (QC Material)</button>
+                            <button onClick={() => setSubTab('non_infra')} className={`px-4 py-1.5 rounded-lg text-xs font-bold ${subTab === 'non_infra' ? 'bg-emerald-500 text-slate-950' : 'text-slate-400'}`}>🤝 Non-Infrastruktur (Sosial/Ekonomi)</button>
+                        </div>
+                    </div>
+
+                    {subTab === 'infra' ? (
+                        <div className="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4">
+                            <h4 className="text-sm font-bold text-cyan-400 uppercase">Sub-Tab 1: Program Infrastruktur (Fisik) & QC Material Verification</h4>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                                <div className="bg-slate-950 p-4 rounded-xl border border-slate-800"><span className="text-slate-400 block">Progres Fisik Proyek</span><strong className="text-2xl text-emerald-400">84.2% On Track</strong></div>
+                                <div className="bg-slate-950 p-4 rounded-xl border border-slate-800"><span className="text-slate-400 block">Status QC Material</span><strong className="text-2xl text-cyan-400">SNI Approved</strong></div>
+                                <div className="bg-slate-950 p-4 rounded-xl border border-slate-800"><span className="text-slate-400 block">Vendor Quarantine</span><strong className="text-2xl text-slate-400">0 Blacklisted</strong></div>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4">
+                            <h4 className="text-sm font-bold text-emerald-400 uppercase">Sub-Tab 2: Program Non-Infrastruktur (Sosial & Ekonomi)</h4>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                                <div className="bg-slate-950 p-4 rounded-xl border border-slate-800"><span className="text-slate-400 block">Penyerapan Tenaga Kerja</span><strong className="text-2xl text-white">4,850 Warga TIE</strong></div>
+                                <div className="bg-slate-950 p-4 rounded-xl border border-slate-800"><span className="text-slate-400 block">Cakupan Beneficiary</span><strong className="text-2xl text-emerald-400">248 Kategori</strong></div>
+                                <div className="bg-slate-950 p-4 rounded-xl border border-slate-800"><span className="text-slate-400 block">Indeks Resiliensi</span><strong className="text-2xl text-amber-400">88.5 / 100</strong></div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        function SpecialModulesSection({ activeRole, notify }) {
+            const [loraMsg, setLoraMsg] = useState('');
+
+            return (
+                <div className="space-y-6">
+                    <div className="flex justify-between items-center">
+                        <div>
+                            <h3 className="text-2xl font-black text-white">Modul Khusus Central OS</h3>
+                            <p className="text-xs text-slate-400">Konsorsium Global, Microinsurance ERRS, Whistleblowing, & LoRa Terminal Off-Grid.</p>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* LORA TERMINAL OFF-GRID */}
+                        <div className="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4">
+                            <h4 className="text-sm font-bold text-cyan-400 flex items-center gap-2">
+                                <span>📻</span> Terminal Komunikasi Radio Off-Grid LoRa/HT
+                            </h4>
+                            <p className="text-xs text-slate-300">Kirim teks terenkripsi antar-posko 3T tanpa jaringan seluler/internet.</p>
+                            
+                            <textarea 
+                                value={loraMsg}
+                                onChange={(e) => setLoraMsg(e.target.value)}
+                                placeholder="Tulis pesan darurat LoRa..." 
+                                className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-white" 
+                                rows="3"
+                            />
+
+                            <button 
+                                onClick={() => {
+                                    if(!loraMsg) return;
+                                    notify('Pesan Radio LoRa Terkirim ke Mesh Node! Hash: 0x9812', 'success');
+                                    setLoraMsg('');
+                                }}
+                                className="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs">
+                                Transmit LoRa Packet
+                            </button>
+                        </div>
+
+                        {/* KAP EXPORT & SP ISSUANCE */}
+                        <div className="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4">
+                            <h4 className="text-sm font-bold text-amber-400 flex items-center gap-2">
+                                <span>📑</span> KAP Report Export & SP Issuance Automation
+                            </h4>
+                            <p className="text-xs text-slate-300">Ekspor laporan keuangan resmi KAP ke PDF/CSV atau terbitkan SP otomatis.</p>
+                            
+                            <div className="flex gap-3">
+                                <button onClick={() => notify('Laporan KAP WTP Berhasil Di-export ke PDF!', 'success')} className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs">
+                                    Export Audit KAP (PDF)
+                                </button>
+                                <button onClick={() => notify('Pengaduan Anonim Terenkripsi SHA-256 Dikirim!', 'info')} className="bg-slate-800 text-slate-200 border border-slate-700 font-bold px-4 py-2 rounded-xl text-xs">
+                                    Whistleblowing Form
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
